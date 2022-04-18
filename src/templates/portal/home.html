@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<ul id="hjustified" class="tabs tabs--justified">
+    <li id="hjustified-1" class="tab" onclick="displayTable('Performance Scoreboard');">
+        <a tabindex="0">Engagement Scores</a>
+    </li>
+    <li id="hjustified-2" class="tab" onclick="displayTable('Program Time Scoreboard');">
+        <a tabindex="0">Programming Times</a>
+    </li>
+    <li id="hjustified-3" class="tab" onclick="displayTable('Decision Time Scoreboard');">
+        <a tabindex="0">Decision Times</a>
+    </li>
+    <li id="hjustified-4" class="tab" onclick="displayTable('Command Time Scoreboard');">
+        <a tabindex="0">Command Times</a>
+    </li>
+    <li id="hjustified-5" class="tab" onclick="displayTable('Cycle Time Scoreboard');">
+        <a tabindex="0">Cycle Times</a>
+    </li>
+    <li id="hjustified-6" class="tab" onclick="displayTable('Avg Performance Scatterplot');">
+        <a tabindex="0">Performance Scatterplot</a>
+    </li>
+    <li id="hjustified-7" class="tab" onclick="displayTable('Decision Cycle Time Scatterplot');">
+        <a tabindex="0">Decision Time vs Cycle Time Scatterplot</a>
+    </li>
+</ul>
+<div id="hjustified-content" class="tab-content">
+    <div id="Performance Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Back Max Score</th>
+              <th>Back Min Score</th>
+              <th>Back Avg Score</th>
+              <th>Front Max Score</th>
+              <th>Front Min Score</th>
+              <th>Front Avg Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_score in user_scores %}
+            <tr>
+              {% if user_score.max_back != None or user_score.min_back != None or user_score.avg_back != None or 
+              user_score.max_front != None or user_score.min_front != None or user_score.avg_front != None %}
+              <td>{{ user_score.username }}</td>
+              <td>{{ user_score.max_back }}</td>
+              <td>{{ user_score.min_back }}</td>
+              <td>{{ user_score.avg_back }}</td>
+              <td>{{ user_score.max_front }}</td>
+              <td>{{ user_score.min_front }}</td>
+              <td>{{ user_score.avg_front }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Program Time Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Time to Program</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in programming_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.user }}</td>
+              <td>{{ user_time.time_to_program }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Decision Time Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Decision Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in decision_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.user }}</td>
+              <td>{{ user_time.decision_time }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Command Time Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Command Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in command_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.user }}</td>
+              <td>{{ user_time.command_time }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Cycle Time Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Cycle Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in cycle_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.user }}</td>
+              <td>{{ user_time.cycle_time }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Avg Performance Scatterplot" class="tab-pane">
+      <div>
+        <canvas id="Performance Scatterplot" style="width:100%, max-width:700px"></canvas>
+      </div>
+    </div>
+    <div id="Decision Cycle Time Scatterplot" class="tab-pane">
+      <div>
+        <canvas id="Decision Time vs Cycle Time Scatterplot" style="width:100%, max-width:700px"></canvas>
+      </div>
+    </div>
+</div>
+
+<script>
+  const performance_scores = {{user_scores|tojson}};
+  const decision_times = {{decision_times|tojson}};
+  const cycle_times = {{cycle_times|tojson}};
+  const current_user = {{g.user['username']|default('undefined')|tojson}};
+
+  let coordinates = [];
+  let current_user_coordinates = [];
+  let all_coordinates = [];
+  let decision_cycle_times = [];
+  let current_user_times = [];
+  let index;
+  
+  for (let i  = 0; i < performance_scores.length; i++) {
+    let avg_front_score = performance_scores[i]["avg_front"];
+    let avg_back_score = performance_scores[i]["avg_back"];
+    let upload_time = performance_scores[i]["upload_time"];
+    let user = performance_scores[i]["username"];
+    let new_coordinates = {
+        x: avg_front_score, 
+        y: avg_back_score,
+        z: upload_time
+    };
+    if (user === current_user) {
+      current_user_coordinates.push(new_coordinates);
+    }
+    else {
+      coordinates.push(new_coordinates);
+    }
+  }
+
+  for (let i = 0; i < decision_times.length; i++) {
+      let upload_time = decision_times[i]["upload_time"];
+      let decision_time = decision_times[i]["decision_time"];
+      let user = decision_times[i]["user"];
+      for (let j = 0; j < cycle_times.length; j++) {
+          let cycle_time = cycle_times[j]["cycle_time"];
+          if (upload_time === cycle_times[j]["upload_time"]) {
+              let new_time = {
+                  x: decision_time,
+                  y: cycle_time,
+                  z: upload_time
+              };
+
+              if (user === current_user) {
+                  current_user_times.push(new_time);
+              }
+              else {
+                  decision_cycle_times.push(new_time);
+              }
+          }
+      }
+  }
+
+  var performanceScoreChart = new Chart("Performance Scatterplot", {
+      type: "scatter",
+      data: {
+          datasets: [
+              {
+                pointRadius: 4,
+                pointBackgroundColor: "rgba(0,0,255,1)",
+                data: coordinates,
+                fill: false,
+                showLine: false
+              },
+              {
+                pointRadius: 4,
+                pointBackgroundColor: "rgba(255,0,0,1)",
+                data: current_user_coordinates,
+                fill: false,
+                showLine: false
+              }
+          ]
+      },
+      options: {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                  label: function(tooltipItem) {
+                      const upload_time = tooltipItem.raw;
+
+                      return `Upload time: ${upload_time['z']}`;
+                  }
+              }
+            },
+            legend: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Average Front Score'
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Average Back Score'
+              }
+            }
+          }
+      }
+  });
+
+  var decisionCycleTimeChart = new Chart("Decision Time vs Cycle Time Scatterplot", {
+      type: "scatter",
+      data: {
+          datasets: [
+              {
+                pointRadius: 4,
+                pointBackgroundColor: "rgba(0,0,255,1)",
+                data: decision_cycle_times,
+                fill: false,
+                showLine: false
+              },
+              {
+                pointRadius: 4,
+                pointBackgroundColor: "rgba(255,0,0,1)",
+                data: current_user_times,
+                fill: false,
+                showLine: false
+              }
+          ]
+      },
+      options: {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                  label: function(tooltipItem) {
+                      const upload_time = tooltipItem.raw;
+
+                      return `Upload time: ${upload_time['z']}`;
+                  }
+              }
+            },
+            legend: {
+              display: false
+            },
+          },
+          scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Decision Time'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Cycle Time'
+                }
+            }
+          }
+      }
+  });
+
+</script>
+{% endblock %}

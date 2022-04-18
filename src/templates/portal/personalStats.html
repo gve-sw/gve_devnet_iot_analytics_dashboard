@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<ul id="hjustified" class="tabs tabs--justified">
+    <li id="hjustified-1" class="tab" onclick="displayTable('Performance Scoreboard');">
+        <a tabindex="0">Engagement Scores</a>
+    </li>
+    <li id="hjustified-2" class="tab" onclick="displayTable('Program Time Scoreboard');">
+        <a tabindex="0">Programming Times</a>
+    </li>
+    <li id="hjustified-3" class="tab" onclick="displayTable('Decision Time Scoreboard');">
+        <a tabindex="0">Decision Times</a>
+    </li>
+    <li id="hjustified-4" class="tab" onclick="displayTable('Command Time Scoreboard');">
+        <a tabindex="0">Command Times</a>
+    </li>
+    <li id="hjustified-5" class="tab" onclick="displayTable('Cycle Time Scoreboard');">
+        <a tabindex="0">Cycle Times</a>
+    </li>
+</ul>
+ <div class="responsive-table" class="tab-content">
+    <div id="Performance Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>Date Uploaded</th>
+              <th>Back Max Score</th>
+              <th>Back Min Score</th>
+              <th>Back Avg Score</th>
+              <th>Front Max Score</th>
+              <th>Front Min Score</th>
+              <th>Front Avg Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_score in user_scores %}
+            <tr>
+              {% if user_score.max_back != None or user_score.min_back != None or user_score.avg_back != None or 
+              user_score.max_front != None or user_score.min_front != None or user_score.avg_front != None %}
+              <td>{{ user_score.upload_time }}</td>
+              <td>{{ user_score.max_back }}</td>
+              <td>{{ user_score.min_back }}</td>
+              <td>{{ user_score.avg_back }}</td>
+              <td>{{ user_score.max_front }}</td>
+              <td>{{ user_score.min_front }}</td>
+              <td>{{ user_score.avg_front }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Program Time Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>Date Uploaded</th>
+              <th>Time to Program</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in programming_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.upload_time }}</td>
+              <td>{{ user_time.time_to_program }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Decision Time Scoreboard" class="tab-pane">
+      <canvas id="Decision Time Chart" style="width:100%; max-width:700px"></canvas>
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>Date Uploaded</th>
+              <th>Decision Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in decision_times %}
+            <tr>
+              {% if user_time != None %}
+              <td id="decision-upload-time">{{ user_time.upload_time }}</td>
+              <td id="decision-time">{{ user_time.decision_time }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Command Time Scoreboard" class="tab-pane">
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>Date Uploaded</th>
+              <th>Command Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in command_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.upload_time }}</td>
+              <td>{{ user_time.command_time }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div id="Cycle Time Scoreboard" class="tab-pane">
+      <canvas id="Cycle Time Chart" style="width:100%; max-width:700px"></canvas>
+      <div class="responsive-table">
+        <table class="table table--lined table--wrapped" aria-label="Wrapped table example">
+          <thead>
+            <tr>
+              <th>Date Uploaded</th>
+              <th>Cycle Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user_time in cycle_times %}
+            <tr>
+              {% if user_time != None %}
+              <td>{{ user_time.upload_time }}</td>
+              <td>{{ user_time.cycle_time }}</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+</div>
+
+<script>
+  let decision_times = {{decision_times|tojson}};
+  let decision_upload_times = [];
+  let upload_to_decision = {};
+  let decision_datapoints = [];
+  let cycle_times = {{cycle_times|tojson}};
+  let cycle_upload_times = [];
+  let upload_to_cycle = {};
+  let cycle_datapoints = [];
+  
+  for (let i = 0; i < decision_times.length; i++) {
+      let upload_time = decision_times[i]["upload_time"];
+      let decision_time = decision_times[i]["decision_time"];
+      decision_upload_times.push(upload_time);
+      upload_to_decision[upload_time] = decision_time;
+  }
+
+  decision_upload_times.sort((time1, time2) => Date(time1) - Date(time2));
+
+  for (let i = 0; i < decision_upload_times.length; i++) {
+      decision_datapoints.push(upload_to_decision[decision_upload_times[i]]);
+  }
+
+  for (let i = 0; i < cycle_times.length; i++) {
+      let upload_time = cycle_times[i]["upload_time"];
+      let cycle_time = cycle_times[i]["cycle_time"];
+      cycle_upload_times.push(upload_time);
+      upload_to_cycle[upload_time] = cycle_time;
+  }
+
+  cycle_upload_times.sort((time1, time2) => Date(time1) - Date(time2));
+
+  for (let i = 0; i < cycle_upload_times.length; i++) {
+      cycle_datapoints.push(upload_to_cycle[cycle_upload_times[i]]);
+  }
+
+  var decisionTimeChart = new Chart("Decision Time Chart", {
+      type: "line",
+      data: {
+        datasets: [{
+            data: decision_datapoints,
+            fill: false
+        }],
+        labels: decision_upload_times
+      },
+      options: {
+        plugins: {
+          legend: {
+              display: false
+          }
+        },
+        scales: {
+          x: {
+              title: {
+                display: true,
+                text: 'Upload Time'
+              }
+          },
+          y: {
+              title: {
+                display: true,
+                labelString: 'Decision Time'
+              }
+          }
+        }
+      }
+  });
+
+  var cycleTimeChart = new Chart("Cycle Time Chart", {
+      type: "line",
+      data: {
+        datasets: [{
+            data: cycle_datapoints,
+            fill: false
+        }],
+        labels: cycle_upload_times
+      },
+      options: {
+        plugins: {
+          legend: {
+              display: false
+          },
+        },
+        scales: {
+          x: {
+              title: {
+                display: true,
+                labelString: 'Upload Time'
+              }
+          },
+          y: {
+              title: {
+                display: true,
+                labelString: 'Cycle Time'
+              }
+          }
+        }
+      }
+  });
+</script>
+
+
+{% endblock %}

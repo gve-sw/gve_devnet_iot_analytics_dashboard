@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="row">
+		<div class="col-12">
+			<div class="panel panel--raised" style="background-color: #f2f2f2; text-align:center;">
+				<form method="post" enctype="multipart/form-data">
+					<div class="row base-margin-bottom">
+						<div class="col-2"></div>
+						<div class="col-8">
+							<h1>{% block title %}<u>Upload Performance Files</u>{% endblock %}</h1>
+						</div>
+						<div class="col-2"></div>
+					</div>
+
+					<div class="row base-margin-bottom">
+            <div class="col-3"></div>
+						<div class="col-3">
+							<h5>Programmming File:</h5>
+						</div>
+						<div class="col-3">
+							<label for="programming_file">File:</label>
+							<input type="file" name="programming_file" id="programming_file">
+						</div>
+            <div class="col-3"></div>
+					</div>
+
+					<div class="row base-margin-bottom">
+            <div class="col-3"></div>
+						<div class="col-3">
+							<h5>Pos Programming File:</h5>
+						</div>
+						<div class="col-3">
+							<label for="pos_programming_file">File:</label>
+							<input type="file" name="pos_programming_file" id="pos_programming_file">
+						</div>
+            <div class="col-3"></div>
+					</div>
+
+					<div class="row base-margin-bottom">
+            <div class="col-3"></div>
+						<div class="col-3">
+							<h5>Back File:</h5>
+						</div>
+						<div class="col-3">
+							<label for="back_file">File:</label>
+							<input type="file" name="back_file" id="back_file">
+						</div>
+            <div class="col-3"></div>
+					</div>
+
+					<div class="row base-margin-bottom">
+            <div class="col-3"></div>
+            <div class="col-3">
+							<h5>Front File:</h5>
+						</div>
+						<div class="col-3">
+							<label for="front_file">File:</label>
+							<input type="file" name="front_file" id="front_file">
+						</div>
+            <div class="col-3"></div>
+					</div>
+
+					<div class="row base-margin-bottom">
+            <div class="col-3"></div>
+						<div class="col-3">
+							<h5>Text File:</h5>
+						</div>
+						<div class="col-3">
+							<label for="text_file">File:</label>
+							<input type="file" name="text_file" id="text_file">
+						</div>
+            <div class="col-3"></div>
+					</div>
+
+					<div class="row base-margin-bottom">
+						<div class="col-4"></div>
+						<div class="col-4">
+							<input class="btn btn--secondary btn--justified" type="submit" value="Upload Files" style="background-color:#0F223F;">
+						</div>
+						<div class="col-4"></div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
